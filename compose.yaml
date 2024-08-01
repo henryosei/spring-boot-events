@@ -1,12 +1,26 @@
 services:
-  postgres:
-    image: 'postgres:latest'
-    environment:
-      - 'POSTGRES_DB=mydatabase'
-      - 'POSTGRES_PASSWORD=secret'
-      - 'POSTGRES_USER=myuser'
+#  postgres:
+#    image: 'postgres:latest'
+#    environment:
+#      - 'POSTGRES_DB=mydatabase'
+#      - 'POSTGRES_PASSWORD=secret'
+#      - 'POSTGRES_USER=myuser'
+#    ports:
+#      - '5432'
+  spring:
+    networks:
+      - mynetwork
+    build:
+      context: .
+      dockerfile: Dockerfile
+  prometheus:
+    networks:
+      - mynetwork
+    image: prom/prometheus
     ports:
-      - '5432'
+      - 9090:9090
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
   rabbitmq:
     image: rabbitmq:3-management
     environment:
@@ -15,3 +29,15 @@ services:
     ports:
       - '5672:5672'
       - 15672:15672
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - 4318:4318 # OpenTelemetry Protocol (OTLP) over HTTP
+      - 16686:16686 # UI port
+      - 14269:14269 # collector admin port: health check at / and metrics at /metrics
+      - 9411:9411 # Zipkin compatible endpoint
+
+networks:
+  mynetwork:
+    driver: bridge
